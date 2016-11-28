@@ -14,8 +14,10 @@ import org.apache.cloudstack.framework.events.EventBusException;
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -40,28 +42,155 @@ public class UsageEventUtils {
     @Inject
     ConfigurationDao configDao;
 
+    private static final List<String> allowedEvents = new ArrayList<String>() {{
+        add(EventTypes.EVENT_VM_CREATE);
+        add(EventTypes.EVENT_VM_DESTROY);
+        add(EventTypes.EVENT_VM_START);
+        add(EventTypes.EVENT_VM_STOP);
+    }};
+
+    /*
+
+     Events:
+
+     VM.CREATE
+     VM.START
+     VM.UPGRADE
+     VM.STOP
+     VM.DESTROY
+
+     */
+
     public UsageEventUtils() {
     }
 
-    public static void publishUsageEvent(final String usageType, final long accountId, final long zoneId, final long resourceId, final String resourceName, final Long
-            offeringId, final Long templateId,
-                                         final Long size, final String entityType, final String entityUUID) {
+    public static void publishUsageEvent(final String usageType, final long accountId, final long zoneId,
+                                         final long resourceId, final String resourceName, final Long offeringId,
+                                         final Long templateId, final Long size, final String entityType,
+                                         final String entityUUID) {
         saveUsageEvent(usageType, accountId, zoneId, resourceId, resourceName, offeringId, templateId, size);
         publishUsageEvent(usageType, accountId, zoneId, entityType, entityUUID);
     }
 
-    public static void saveUsageEvent(final String usageType, final long accountId, final long zoneId, final long resourceId, final String resourceName, final Long offeringId,
+    public static void publishUsageEvent(final String usageType, final long accountId, final long zoneId,
+                                         final long resourceId, final String resourceName, final Long offeringId,
+                                         final Long templateId, final Long size, final String entityType,
+                                         final String entityUUID, final boolean displayResource) {
+        if (displayResource) {
+            saveUsageEvent(usageType, accountId, zoneId, resourceId, resourceName, offeringId, templateId, size);
+        }
+        publishUsageEvent(usageType, accountId, zoneId, entityType, entityUUID);
+    }
+
+    public static void publishUsageEvent(final String usageType, final long accountId, final long zoneId,
+                                         final long resourceId, final String resourceName, final Long offeringId,
+                                         final Long templateId, final Long size, final Long virtualSize,
+                                         final String entityType, final String entityUUID) {
+        saveUsageEvent(usageType, accountId, zoneId, resourceId, resourceName, offeringId, templateId, size, virtualSize);
+        publishUsageEvent(usageType, accountId, zoneId, entityType, entityUUID);
+    }
+
+    public static void publishUsageEvent(final String usageType, final long accountId, final long zoneId,
+                                         final long resourceId, final String resourceName, final String entityType,
+                                         final String entityUUID) {
+        saveUsageEvent(usageType, accountId, zoneId, resourceId, resourceName);
+        publishUsageEvent(usageType, accountId, zoneId, entityType, entityUUID);
+    }
+
+    public static void publishUsageEvent(final String usageType, final long accountId, final long zoneId,
+                                         final long resourceId, final String resourceName, final String entityType,
+                                         final String entityUUID, final boolean displayResource) {
+        if (displayResource) {
+            saveUsageEvent(usageType, accountId, zoneId, resourceId, resourceName);
+            publishUsageEvent(usageType, accountId, zoneId, entityType, entityUUID);
+        }
+    }
+
+    public static void publishUsageEvent(final String usageType, final long accountId, final long zoneId,
+                                         final long ipAddressId, final String ipAddress, final boolean isSourceNat,
+                                         final String guestType, final boolean isSystem, final String entityType,
+                                         final String entityUUID) {
+        saveUsageEvent(usageType, accountId, zoneId, ipAddressId, ipAddress, isSourceNat, guestType, isSystem);
+        publishUsageEvent(usageType, accountId, zoneId, entityType, entityUUID);
+    }
+
+    public static void publishUsageEvent(final String usageType, final long accountId, final long zoneId,
+                                         final long resourceId, final String resourceName, final Long offeringId,
+                                         final Long templateId, final String resourceType, final String entityType,
+                                         final String entityUUID, final boolean displayResource) {
+        if (displayResource) {
+            saveUsageEvent(usageType, accountId, zoneId, resourceId, resourceName, offeringId, templateId, resourceType);
+        }
+        publishUsageEvent(usageType, accountId, zoneId, entityType, entityUUID);
+    }
+
+    public static void publishUsageEvent(final String usageType, final long accountId, final long zoneId,
+                                         final long vmId, final long securityGroupId, final String entityType,
+                                         final String entityUUID) {
+        saveUsageEvent(usageType, accountId, zoneId, vmId, securityGroupId);
+        publishUsageEvent(usageType, accountId, zoneId, entityType, entityUUID);
+    }
+
+    public static void publishUsageEvent(final String usageType, final long accountId, final long zoneId,
+                                         final long resourceId, final String resourceName, final Long offeringId,
+                                         final Long templateId, final String resourceType, final String entityType,
+                                         final String entityUUID, final Map<String, String> details,
+                                         final boolean displayResource) {
+        if (displayResource) {
+            saveUsageEvent(usageType, accountId, zoneId, resourceId, resourceName, offeringId, templateId, resourceType, details);
+        }
+        publishUsageEvent(usageType, accountId, zoneId, entityType, entityUUID);
+    }
+
+    public static void saveUsageEvent(final String usageType, final long accountId, final long zoneId,
+                                      final long resourceId, final String resourceName, final Long offeringId,
                                       final Long templateId, final Long size) {
         s_usageEventDao.persist(new UsageEventVO(usageType, accountId, zoneId, resourceId, resourceName, offeringId, templateId, size));
     }
 
-    private static void publishUsageEvent(final String usageEventType, final Long accountId, final Long zoneId, final String resourceType, final String resourceUUID) {
-        final String configKey = "publish.usage.events";
-        final String value = s_configDao.getValue(configKey);
-        final boolean configValue = Boolean.parseBoolean(value);
-        if (!configValue) {
+    public static void saveUsageEvent(final String usageType, final long accountId, final long zoneId,
+                                      final long resourceId, final String resourceName, final Long offeringId,
+                                      final Long templateId, final Long size, final Long virtualSize) {
+        s_usageEventDao.persist(new UsageEventVO(usageType, accountId, zoneId, resourceId, resourceName, offeringId, templateId, size, virtualSize));
+    }
+
+    public static void saveUsageEvent(final String usageType, final long accountId, final long zoneId,
+                                      final long resourceId, final String resourceName) {
+        s_usageEventDao.persist(new UsageEventVO(usageType, accountId, zoneId, resourceId, resourceName));
+    }
+
+    public static void saveUsageEvent(final String usageType, final long accountId, final long zoneId,
+                                      final long ipAddressId, final String ipAddress, final boolean isSourceNat,
+                                      final String guestType, final boolean isSystem) {
+        s_usageEventDao.persist(new UsageEventVO(usageType, accountId, zoneId, ipAddressId, ipAddress, isSourceNat, guestType, isSystem));
+    }
+
+    public static void saveUsageEvent(final String usageType, final long accountId, final long zoneId,
+                                      final long resourceId, final String resourceName, final Long offeringId,
+                                      final Long templateId, final String resourceType) {
+        s_usageEventDao.persist(new UsageEventVO(usageType, accountId, zoneId, resourceId, resourceName, offeringId, templateId, resourceType));
+    }
+
+    public static void saveUsageEvent(final String usageType, final long accountId, final long zoneId,
+                                      final long vmId, final long securityGroupId) {
+        s_usageEventDao.persist(new UsageEventVO(usageType, accountId, zoneId, vmId, securityGroupId));
+    }
+
+    private static void saveUsageEvent(final String usageType, final long accountId, final long zoneId,
+                                       final long resourceId, final String resourceName, final Long offeringId,
+                                       final Long templateId, final String resourceType,
+                                       final Map<String, String> details) {
+        final UsageEventVO usageEvent = new UsageEventVO(usageType, accountId, zoneId, resourceId, resourceName, offeringId, templateId, resourceType);
+        s_usageEventDao.persist(usageEvent);
+        s_usageEventDao.saveDetails(usageEvent.getId(), details);
+    }
+
+    private static void publishUsageEvent(final String usageEventType, final Long accountId, final Long zoneId,
+                                          final String resourceType, final String resourceUUID) {
+        if (!validConfig()) {
             return;
         }
+
         try {
             s_eventBus = ComponentContext.getComponent(EventBus.class);
         } catch (final NoSuchBeanDefinitionException nbe) {
@@ -69,17 +198,21 @@ public class UsageEventUtils {
         }
 
         final Account account = s_accountDao.findById(accountId);
-        final DataCenterVO dc = s_dcDao.findById(zoneId);
-
         // if account has been deleted, this might be called during cleanup of resources and results in null pointer
         if (account == null) {
             return;
         }
 
+        final DataCenterVO dc = s_dcDao.findById(zoneId);
+
         // if an invalid zone is passed in, create event without zone UUID
         String zoneUuid = null;
         if (dc != null) {
             zoneUuid = dc.getUuid();
+        }
+
+        if (!allowedEvents.contains(usageEventType)) {
+            return;
         }
 
         final Event event = new Event(Name, EventCategory.USAGE_EVENT.getName(), usageEventType, resourceType, resourceUUID);
@@ -103,101 +236,11 @@ public class UsageEventUtils {
         }
     }
 
-    public static void publishUsageEvent(final String usageType, final long accountId, final long zoneId, final long resourceId, final String resourceName, final Long
-            offeringId, final Long templateId,
-                                         final Long size, final String entityType, final String entityUUID, final boolean displayResource) {
-        if (displayResource) {
-            saveUsageEvent(usageType, accountId, zoneId, resourceId, resourceName, offeringId, templateId, size);
-        }
-        publishUsageEvent(usageType, accountId, zoneId, entityType, entityUUID);
-    }
+    private static boolean validConfig() {
+        final String configKey = "publish.usage.events";
+        final String value = s_configDao.getValue(configKey);
 
-    public static void publishUsageEvent(final String usageType, final long accountId, final long zoneId, final long resourceId, final String resourceName, final Long
-            offeringId, final Long templateId,
-                                         final Long size, final Long virtualSize, final String entityType, final String entityUUID) {
-        saveUsageEvent(usageType, accountId, zoneId, resourceId, resourceName, offeringId, templateId, size, virtualSize);
-        publishUsageEvent(usageType, accountId, zoneId, entityType, entityUUID);
-    }
-
-    public static void saveUsageEvent(final String usageType, final long accountId, final long zoneId, final long resourceId, final String resourceName, final Long offeringId,
-                                      final Long templateId, final Long size,
-                                      final Long virtualSize) {
-        s_usageEventDao.persist(new UsageEventVO(usageType, accountId, zoneId, resourceId, resourceName, offeringId, templateId, size, virtualSize));
-    }
-
-    public static void publishUsageEvent(final String usageType, final long accountId, final long zoneId, final long resourceId, final String resourceName, final String
-            entityType, final String entityUUID) {
-        saveUsageEvent(usageType, accountId, zoneId, resourceId, resourceName);
-        publishUsageEvent(usageType, accountId, zoneId, entityType, entityUUID);
-    }
-
-    public static void saveUsageEvent(final String usageType, final long accountId, final long zoneId, final long resourceId, final String resourceName) {
-        s_usageEventDao.persist(new UsageEventVO(usageType, accountId, zoneId, resourceId, resourceName));
-    }
-
-    public static void publishUsageEvent(final String usageType, final long accountId, final long zoneId, final long resourceId, final String resourceName, final String
-            entityType, final String entityUUID, final boolean
-                                                 diplayResource) {
-        if (diplayResource) {
-            saveUsageEvent(usageType, accountId, zoneId, resourceId, resourceName);
-            publishUsageEvent(usageType, accountId, zoneId, entityType, entityUUID);
-        }
-    }
-
-    public static void publishUsageEvent(final String usageType, final long accountId, final long zoneId, final long ipAddressId, final String ipAddress, final boolean
-            isSourceNat, final String guestType,
-                                         final boolean isSystem, final String entityType, final String entityUUID) {
-        saveUsageEvent(usageType, accountId, zoneId, ipAddressId, ipAddress, isSourceNat, guestType, isSystem);
-        publishUsageEvent(usageType, accountId, zoneId, entityType, entityUUID);
-    }
-
-    public static void saveUsageEvent(final String usageType, final long accountId, final long zoneId, final long ipAddressId, final String ipAddress, final boolean isSourceNat,
-                                      final String guestType,
-                                      final boolean isSystem) {
-        s_usageEventDao.persist(new UsageEventVO(usageType, accountId, zoneId, ipAddressId, ipAddress, isSourceNat, guestType, isSystem));
-    }
-
-    public static void publishUsageEvent(final String usageType, final long accountId, final long zoneId, final long resourceId, final String resourceName, final Long
-            offeringId, final Long templateId,
-                                         final String resourceType, final String entityType, final String entityUUID, final boolean displayResource) {
-        if (displayResource) {
-            saveUsageEvent(usageType, accountId, zoneId, resourceId, resourceName, offeringId, templateId, resourceType);
-        }
-        publishUsageEvent(usageType, accountId, zoneId, entityType, entityUUID);
-    }
-
-    public static void saveUsageEvent(final String usageType, final long accountId, final long zoneId, final long resourceId, final String resourceName, final Long offeringId,
-                                      final Long templateId,
-                                      final String resourceType) {
-        s_usageEventDao.persist(new UsageEventVO(usageType, accountId, zoneId, resourceId, resourceName, offeringId, templateId, resourceType));
-    }
-
-    public static void publishUsageEvent(final String usageType, final long accountId, final long zoneId, final long vmId, final long securityGroupId, final String entityType,
-                                         final String entityUUID) {
-        saveUsageEvent(usageType, accountId, zoneId, vmId, securityGroupId);
-        publishUsageEvent(usageType, accountId, zoneId, entityType, entityUUID);
-    }
-
-    public static void saveUsageEvent(final String usageType, final long accountId, final long zoneId, final long vmId, final long securityGroupId) {
-        s_usageEventDao.persist(new UsageEventVO(usageType, accountId, zoneId, vmId, securityGroupId));
-    }
-
-    public static void publishUsageEvent(final String usageType, final long accountId, final long zoneId, final long resourceId, final String resourceName, final Long
-            offeringId, final Long templateId,
-                                         final String resourceType, final String entityType, final String entityUUID, final Map<String, String> details, final boolean
-                                                 displayResource) {
-        if (displayResource) {
-            saveUsageEvent(usageType, accountId, zoneId, resourceId, resourceName, offeringId, templateId, resourceType, details);
-        }
-        publishUsageEvent(usageType, accountId, zoneId, entityType, entityUUID);
-    }
-
-    private static void saveUsageEvent(final String usageType, final long accountId, final long zoneId, final long resourceId, final String resourceName, final Long offeringId,
-                                       final Long templateId,
-                                       final String resourceType, final Map<String, String> details) {
-        final UsageEventVO usageEvent = new UsageEventVO(usageType, accountId, zoneId, resourceId, resourceName, offeringId, templateId, resourceType);
-        s_usageEventDao.persist(usageEvent);
-        s_usageEventDao.saveDetails(usageEvent.getId(), details);
+        return Boolean.parseBoolean(value);
     }
 
     @PostConstruct
@@ -207,4 +250,5 @@ public class UsageEventUtils {
         s_dcDao = dcDao;
         s_configDao = configDao;
     }
+
 }
