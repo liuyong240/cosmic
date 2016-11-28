@@ -105,11 +105,11 @@ public class VolumeStateListener implements StateListener<State, Event, Volume> 
         eventDescription.put("eventDateTime", eventDate);
 
         eventMsg.setDescription(eventDescription);
-        try {
-            s_eventBus.publish(eventMsg);
-        } catch (final EventBusException e) {
-            s_logger.warn("Failed to state change event on the the event bus.");
-        }
+//        try {
+//            s_eventBus.publish(eventMsg);
+//        } catch (final EventBusException e) {
+//            s_logger.warn("Failed to state change event on the the event bus.");
+//        }
     }
 
     private String getEntityFromClassName(final String entityClassName) {

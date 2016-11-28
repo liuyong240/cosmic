@@ -367,12 +367,12 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
         }
         event.setDescription(eventDescription);
 
-        try {
-            eventBus.publish(event);
-        } catch (final EventBusException evx) {
-            final String errMsg = "Failed to publish async job event on the the event bus.";
-            s_logger.warn(errMsg, evx);
-        }
+//        try {
+//            eventBus.publish(event);
+//        } catch (final EventBusException evx) {
+//            final String errMsg = "Failed to publish async job event on the the event bus.";
+//            s_logger.warn(errMsg, evx);
+//        }
     }
 
     // NOTE: handle() only handles over the wire (OTW) requests from integration.api.port 8096

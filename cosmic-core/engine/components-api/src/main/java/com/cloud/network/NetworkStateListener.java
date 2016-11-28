@@ -81,11 +81,11 @@ public class NetworkStateListener implements StateListener<State, Event, Network
         eventDescription.put("eventDateTime", eventDate);
 
         eventMsg.setDescription(eventDescription);
-        try {
-            s_eventBus.publish(eventMsg);
-        } catch (final EventBusException e) {
-            s_logger.warn("Failed to publish state change event on the the event bus.");
-        }
+//        try {
+//            s_eventBus.publish(eventMsg);
+//        } catch (final EventBusException e) {
+//            s_logger.warn("Failed to publish state change event on the the event bus.");
+//        }
     }
 
     private String getEntityFromClassName(final String entityClassName) {

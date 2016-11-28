@@ -134,11 +134,11 @@ public class ActionEventUtils {
 
         event.setDescription(eventDescription);
 
-        try {
-            s_eventBus.publish(event);
-        } catch (final EventBusException e) {
-            s_logger.warn("Failed to publish action event on the the event bus.");
-        }
+//        try {
+//            s_eventBus.publish(event);
+//        } catch (final EventBusException e) {
+//            s_logger.warn("Failed to publish action event on the the event bus.");
+//        }
     }
 
     private static Event persistActionEvent(final Long userId, final Long accountId, final Long domainId, final String level, final String type,
