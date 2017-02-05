@@ -236,4 +236,14 @@ public class PublicIp implements PublicIpAddress {
     public Class<?> getEntityType() {
         return IpAddress.class;
     }
+
+    @Override
+    public State getRuleState() {
+        return _addr.getRuleState();
+    }
+
+    @Override
+    public void setRuleState(final State ruleState) {
+        _addr.setRuleState(ruleState);
+    }
 }

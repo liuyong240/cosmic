@@ -78,9 +78,11 @@ public class IPAddressVO implements IpAddress {
     private boolean portable = false;
     @Column(name = GenericDao.REMOVED_COLUMN)
     private Date removed;
-
     @Column(name = GenericDao.CREATED_COLUMN)
     private Date created;
+    @Enumerated(value = EnumType.STRING)
+    @Column(name = "rule_state")
+    State ruleState;
 
     protected IPAddressVO() {
         uuid = UUID.randomUUID().toString();
@@ -354,5 +356,15 @@ public class IPAddressVO implements IpAddress {
     @Override
     public Class<?> getEntityType() {
         return IpAddress.class;
+    }
+
+    @Override
+    public State getRuleState() {
+        return ruleState;
+    }
+
+    @Override
+    public void setRuleState(final State ruleState) {
+        this.ruleState = ruleState;
     }
 }

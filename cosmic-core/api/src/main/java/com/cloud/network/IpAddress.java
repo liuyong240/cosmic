@@ -63,6 +63,10 @@ public interface IpAddress extends ControlledEntity, Identity, InternalIdentity,
 
     public Date getCreated();
 
+    State getRuleState();
+
+    void setRuleState(State ruleState);
+
     enum State {
         Allocating, // The IP Address is being propagated to other network elements and is not ready for use yet.
         Allocated, // The IP address is in used.

@@ -1695,6 +1695,17 @@ public class IpAddressManagerImpl extends ManagerBase implements IpAddressManage
                 : this.acquireGuestIpAddress(network, NetUtils.long2Ip(availableIps.first()));
     }
 
+    // Get the list of public IPs that need to be applied for a static NAT enable/disable operation
+    // Manipulating only these ips prevents concurrency issues when disabling static nat at the same time.
+    public List<IPAddressVO> getStaticNatSourceIps(final List<? extends StaticNat> staticNats) {
+        final List<IPAddressVO> userIps = new ArrayList<>();
+
+        for (final StaticNat snat : staticNats) {
+            userIps.add(_ipAddressDao.findById(snat.getSourceIpAddressId()));
+        }
+        return userIps;
+    }
+
     @Override
     public boolean applyStaticNats(final List<? extends StaticNat> staticNats, final boolean continueOnError, final boolean forRevoke) throws ResourceUnavailableException {
         if (staticNats == null || staticNats.size() == 0) {
@@ -1711,8 +1722,7 @@ public class IpAddressManagerImpl extends ManagerBase implements IpAddressManage
             return true;
         }
 
-        // get the list of public ip's owned by the network
-        final List<IPAddressVO> userIps = _ipAddressDao.listByAssociatedNetwork(network.getId(), null);
+        final List<IPAddressVO> userIps = getStaticNatSourceIps(staticNats);
         final List<PublicIp> publicIps = new ArrayList<>();
         if (userIps != null && !userIps.isEmpty()) {
             for (final IPAddressVO userIp : userIps) {

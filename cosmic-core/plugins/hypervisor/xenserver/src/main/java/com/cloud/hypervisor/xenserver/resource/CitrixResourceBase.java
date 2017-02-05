@@ -54,6 +54,8 @@ import com.cloud.storage.Volume;
 import com.cloud.storage.VolumeVO;
 import com.cloud.storage.resource.StorageSubsystemCommandHandler;
 import com.cloud.storage.resource.StorageSubsystemCommandHandlerBase;
+import com.cloud.storage.to.TemplateObjectTO;
+import com.cloud.storage.to.VolumeObjectTO;
 import com.cloud.template.VirtualMachineTemplate.BootloaderType;
 import com.cloud.utils.ExecutionResult;
 import com.cloud.utils.NumbersUtil;
@@ -67,8 +69,6 @@ import com.cloud.utils.script.Script;
 import com.cloud.utils.ssh.SSHCmdHelper;
 import com.cloud.utils.ssh.SshHelper;
 import com.cloud.vm.VirtualMachine.PowerState;
-import com.cloud.storage.to.TemplateObjectTO;
-import com.cloud.storage.to.VolumeObjectTO;
 
 import javax.ejb.Local;
 import javax.naming.ConfigurationException;
@@ -320,9 +320,9 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
         final Connection conn = getConnection();
         final String routerName = cmd.getAccessDetail(NetworkElementCommand.ROUTER_NAME);
         final String routerIp = cmd.getAccessDetail(NetworkElementCommand.ROUTER_IP);
+        final String lastIp = cmd.getAccessDetail(NetworkElementCommand.NETWORK_PUB_LAST_IP);
         try {
             final IpAddressTO[] ips = cmd.getIpAddresses();
-            final int ipsCount = ips.length;
             for (final IpAddressTO ip : ips) {
 
                 final VM router = getVM(conn, routerName);
@@ -343,22 +343,20 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
 
                 Network network = getNetwork(conn, nic);
 
-                // If we are disassociating the last IP address in the VLAN, we
-                // need
-                // to remove a VIF
+                // If we are disassociating the last IP address in the VLAN, we need to remove a VIF
                 boolean removeVif = false;
 
-                // there is only one ip in this public vlan and removing it, so
-                // remove the nic
-                if (ipsCount == 1 && !ip.isAdd()) {
-                    removeVif = true;
+                // there is only one ip in this public vlan and removing it, so remove the nic
+                if (lastIp != null && !ip.isAdd()) {
+                    final VIF correctVif = getCorrectVif(conn, router, network);
+                    // in isolated network eth2 is the default public interface. We don't want to delete it.
+                    if (correctVif != null && !correctVif.getDevice(conn).equals("2")) {
+                        removeVif = true;
+                    }
                 }
-
                 if (removeVif) {
 
-                    // Determine the correct VIF on DomR to
-                    // associate/disassociate the
-                    // IP address with
+                    // Determine the correct VIF on DomR to associate/disassociate the IP address with
                     final VIF correctVif = getCorrectVif(conn, router, network);
                     if (correctVif != null) {
                         network = correctVif.getNetwork(conn);

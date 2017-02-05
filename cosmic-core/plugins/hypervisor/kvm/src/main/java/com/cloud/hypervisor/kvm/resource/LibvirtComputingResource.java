@@ -312,6 +312,7 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
 
         final String routerName = cmd.getAccessDetail(NetworkElementCommand.ROUTER_NAME);
         final String routerIp = cmd.getAccessDetail(NetworkElementCommand.ROUTER_IP);
+        final String lastIp = cmd.getAccessDetail(NetworkElementCommand.NETWORK_PUB_LAST_IP);
         final Connect conn;
 
         try {
@@ -335,20 +336,21 @@ public class LibvirtComputingResource extends ServerResourceBase implements Serv
             }
 
             final IpAddressTO[] ips = cmd.getIpAddresses();
-            final int numOfIps = ips.length;
             int nicNum = 0;
             for (final IpAddressTO ip : ips) {
 
                 if (!broadcastUriAllocatedToVm.containsKey(ip.getBroadcastUri())) {
-          /* plug a vif into router */
+                    /* plug a vif into router */
                     vifHotPlug(conn, routerName, ip.getBroadcastUri(), ip.getVifMacAddress());
                     broadcastUriAllocatedToVm.put(ip.getBroadcastUri(), nicPos++);
                 }
                 nicNum = broadcastUriAllocatedToVm.get(ip.getBroadcastUri());
-
-                if (numOfIps == 1 && !ip.isAdd()) {
-                    vifHotUnPlug(conn, routerName, ip.getVifMacAddress());
-                    networkUsage(routerIp, "deleteVif", "eth" + nicNum);
+                if (lastIp != null && !ip.isAdd()) {
+                    // in isolated network eth2 is the default public interface. We don't want to delete it.
+                    if (nicNum != 2) {
+                        vifHotUnPlug(conn, routerName, ip.getVifMacAddress());
+                        networkUsage(routerIp, "deleteVif", "eth" + nicNum);
+                    }
                 }
             }
         } catch (final LibvirtException e) {
