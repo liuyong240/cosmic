@@ -66,4 +66,19 @@ INSERT INTO `cloud`.`configuration` (category, instance, component, name, value)
             VALUES ('Advanced', 'DEFAULT', 'management-server',
             'developer', 'true');
 
+UPDATE service_offering SET ha_enabled = 1;
+UPDATE vm_instance SET ha_enabled = 1;
+
+INSERT INTO cloud.configuration (instance, name, value) VALUE('DEFAULT', 'network.gc.interval', '10') ON DUPLICATE KEY UPDATE value = '10';
+INSERT INTO cloud.configuration (instance, name, value) VALUE('DEFAULT', 'network.gc.wait', '10') ON DUPLICATE KEY UPDATE value = '10';
+
+INSERT INTO cloud.configuration (instance, name, value) VALUE('DEFAULT', 'vpc.max.networks', '10') ON DUPLICATE KEY UPDATE value = '10';
+
+INSERT INTO cloud.configuration (instance, name, value) VALUE('DEFAULT', 'sdn.ovs.controller.default.label', 'cloudbr0') ON DUPLICATE KEY UPDATE value = 'cloudbr0';
+INSERT INTO cloud.configuration (instance, name, value) VALUE('DEFAULT', 'kvm.private.network.device', 'cloudbr0') ON DUPLICATE KEY UPDATE value = 'cloudbr0';
+INSERT INTO cloud.configuration (instance, name, value) VALUE('DEFAULT', 'kvm.public.network.device', 'pub0') ON DUPLICATE KEY UPDATE value = 'pub0';
+INSERT INTO cloud.configuration (instance, name, value) VALUE('DEFAULT', 'kvm.guest.network.device', 'cloudbr0') ON DUPLICATE KEY UPDATE value = 'cloudbr0';
+
+INSERT INTO cloud.configuration (instance, name, value) VALUE('DEFAULT', 'vm.destroy.forcestop', 'true') ON DUPLICATE KEY UPDATE value = '4';
+
 commit;
