@@ -23,6 +23,7 @@ import com.cloud.user.Account;
 import com.cloud.user.User;
 import com.cloud.utils.exception.InvalidParameterValueException;
 
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -128,7 +129,12 @@ public class UpdateNetworkCmd extends BaseAsyncCustomIdCmd {
         return dns2;
     }
 
-    public String getIpExclusionList() { return ipExclusionList; }
+    public String getIpExclusionList() {
+        if(StringUtils.isEmpty(ipExclusionList)){
+            return ipExclusionList;
+        }
+        return ipExclusionList.replaceAll("\\s","");
+    }
 
     public Boolean getChangeCidr() {
         if (changeCidr != null) {
