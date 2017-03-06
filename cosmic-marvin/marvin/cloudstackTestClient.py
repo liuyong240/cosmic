@@ -38,7 +38,6 @@ class CSTestClient(object):
     def __init__(self, mgmt_details,
                  dbsvr_details,
                  async_timeout=3600,
-                 test_data_filepath=None,
                  zone=None,
                  hypervisor_type=None):
         self.__mgmtDetails = mgmt_details
@@ -53,8 +52,8 @@ class CSTestClient(object):
         self.__asyncJobMgr = None
         self.__id = None
         self.__hypervisor = hypervisor_type
-        self.__testDataFilePath = test_data_filepath
         self.__parsedTestDataConfig = None
+        self.__newParsedTestDataConfig = None
         self.__zone = zone
         self.__setHypervisorInfo()
 
@@ -74,6 +73,15 @@ class CSTestClient(object):
         @Output : Returns the Parsed Test Data Dictionary
         '''
         return copy.deepcopy(self.__parsedTestDataConfig)
+
+    def getNewParsedTestDataConfig(self):
+        '''
+        @Name : getNewParsedTestDataConfig
+        @Desc : Provides the TestData Config needed for
+                Tests are to Run
+        @Output : Returns the New Parsed Test Data Dictionary
+        '''
+        return copy.deepcopy(self.__newParsedTestDataConfig)
 
     def getZoneForTests(self):
         '''
@@ -225,13 +233,14 @@ class CSTestClient(object):
             '''
             1. Check Config,Zone,Hypervisor Information
             '''
-            self.__configObj = ConfigManager(self.__testDataFilePath)
+            self.__configObj = ConfigManager()
 
             if not self.__configObj or not self.__hypervisor:
                 self.__logger.error("Either Hypervisor is None or Not able to create ConfigManager Object")
                 return FAILED
 
             self.__parsedTestDataConfig = self.__configObj.getConfig()
+            self.__newParsedTestDataConfig = self.__configObj.getNewConfig()
             self.__logger.info("Parsing Test data successful")
 
             '''

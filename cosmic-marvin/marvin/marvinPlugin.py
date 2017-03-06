@@ -25,7 +25,6 @@ class MarvinPlugin(Plugin):
     def __init__(self):
         self.__identifier = None
         self.__testClient = None
-        self.__logFolderPath = None
         self.__parsedConfig = None
         '''
         Contains Config File

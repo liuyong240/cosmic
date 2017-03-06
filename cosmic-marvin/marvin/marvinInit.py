@@ -30,7 +30,6 @@ class MarvinInit:
         self.__testModName = test_mod_name
         self.__testClient = None
         self.__tcResultFile = None
-        self.__testDataFilePath = None
         self.__zoneForTests = zone
         self.__parsedConfig = None
         self.__hypervisorType = hypervisor_type
@@ -55,9 +54,6 @@ class MarvinInit:
 
     def getParsedConfig(self):
         return self.__parsedConfig
-
-    def getLogFolderPath(self):
-        return self.__logFolderPath
 
     def getTestClient(self):
         return self.__testClient
@@ -118,7 +114,6 @@ class MarvinInit:
             self.__tcRunLogger.info("=== Marvin Init Started ===")
             if ((self.__parseConfig() != FAILED) and
                     (self.__setHypervisorAndZoneInfo()) and
-                    (self.__setTestDataPath() != FAILED) and
                     (self.__createTestClient() != FAILED) and
                     (self.__deployDC() != FAILED)):
                 self.__tcRunLogger.info("=== Marvin Init Successful ===")
@@ -142,7 +137,6 @@ class MarvinInit:
             self.__testClient = CSTestClient(
                 mgt_details,
                 dbsvr_details,
-                test_data_filepath=self.__testDataFilePath,
                 zone=self.__zoneForTests,
                 hypervisor_type=self.__hypervisorType)
             if self.__testClient:
@@ -150,22 +144,6 @@ class MarvinInit:
             return FAILED
         except Exception as e:
             self.__tcRunLogger.exception("=== Marvin Create Test Client Failed: %s ===" % e)
-            return FAILED
-
-    def __setTestDataPath(self):
-        '''
-        @Name : __setTestDataPath
-        @Desc : Sets the TestData Path for tests to run
-        @Output:Returns SUCCESS or FAILED
-        '''
-        try:
-            if ((self.__parsedConfig.TestData is not None) and
-                    (self.__parsedConfig.TestData.Path is not None)):
-                self.__testDataFilePath = self.__parsedConfig.TestData.Path
-            self.__tcRunLogger.info("=== Marvin Setting TestData Successful ===")
-            return SUCCESS
-        except Exception as e:
-            self.__tcRunLogger.exception("=== Marvin Setting TestData Successful Failed: %s ===" % e)
             return FAILED
 
     def __deployDC(self):

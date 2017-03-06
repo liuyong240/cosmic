@@ -4,6 +4,7 @@ from optparse import OptionParser
 
 import jsonHelper
 from config.test_data import test_data
+from config.test_scenarios import scenarios
 from marvin.cloudstackException import printException
 from marvin.codes import *
 
@@ -291,21 +292,22 @@ class ConfigManager(object):
               "getConfig" API,once configObj is returned.
     '''
 
-    def __init__(self, cfg_file=None):
-        self.__filePath = cfg_file
+    def __init__(self):
         self.__parsedCfgDict = None
+        self.__newParsedCfgDict = None
         '''
         Set the Configuration
         '''
         self.__setConfig()
 
     def __setConfig(self):
-        if not self.__verifyFile():
-            dirPath = os.path.dirname(__file__)
-            self.__filePath = str(os.path.join(dirPath, "config/test_data.py"))
-        self.__parsedCfgDict = self.__parseConfig()
+        dirPath = os.path.dirname(__file__)
+        oldConfig = str(os.path.join(dirPath, "config/test_data.py"))
+        newConfig = str(os.path.join(dirPath, "config/test_scenarios.py"))
+        self.__parsedCfgDict = self.__parseConfig(oldConfig)
+        self.__newParsedCfgDict = self.__parseConfig(newConfig)
 
-    def __parseConfig(self):
+    def __parseConfig(self, filePath):
         '''
         @Name : __parseConfig
         @Description: Parses the Input configuration Json file
@@ -316,34 +318,14 @@ class ConfigManager(object):
         '''
         config_dict = None
         try:
-            if self.__filePath.endswith(".py"):
+            if filePath.endswith("config/test_data.py"):
                 config_dict = test_data
-            else:
-                configLines = []
-                with open(self.__filePath, 'r') as fp:
-                    for line in fp:
-                        ws = line.strip()
-                        if not ws.startswith("#"):
-                            configLines.append(ws)
-                config = json.loads("\n".join(configLines))
-                config_dict = config
+            elif filePath.endswith("config/test_scenarios.py"):
+                config_dict = scenarios
         except Exception as e:
             printException(e)
         finally:
             return config_dict
-
-    def __verifyFile(self):
-        '''
-        @Name : __parseConfig
-        @Description: Parses the Input configuration Json file
-                  and returns a dictionary from the file.
-        @Input      : NA
-        @Output     : True or False based upon file input validity
-                      and availability
-        '''
-        if self.__filePath is None or self.__filePath == '':
-            return False
-        return os.path.exists(self.__filePath)
 
     def getSectionData(self, section=None):
         '''
@@ -368,8 +350,17 @@ class ConfigManager(object):
         @Output: ParsedDict if successful if  cfg file provided is valid
                  None if cfg file is invalid or not able to be parsed
         '''
-        out = self.__parsedCfgDict
-        return out
+        return self.__parsedCfgDict
+
+    def getNewConfig(self):
+        '''
+        @Name  : getNewConfig
+        @Desc  : Returns the New Parsed Dictionary of Config Provided
+        @Input : NA
+        @Output: ParsedDict if successful if  cfg file provided is valid
+                 None if cfg file is invalid or not able to be parsed
+        '''
+        return self.__newParsedCfgDict
 
 
 def getDeviceUrl(obj):

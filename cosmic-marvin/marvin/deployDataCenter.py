@@ -18,7 +18,6 @@ import configGenerator
 from cloudstackException import InvalidParameterException
 from cloudstackTestClient import CSTestClient
 from codes import (FAILED, SUCCESS)
-from config.test_data import test_data
 from lib.utils import random_gen
 from marvin.cloudstackAPI import *
 from marvinLog import MarvinLog
@@ -52,10 +51,6 @@ class DeployDataCenters(object):
 
     def __cleanAndExit(self):
         try:
-            self.__logger.info("=== deploy dc failed, so cleaning the created entries ===")
-            if not test_data.get("deleteDC", None):
-                self.__logger.info("=== Deploy DC Clean Up flag not set. So, exiting ===")
-                exit(1)
             self.__logger.info("=== Deploy DC Failed, So Cleaning to Exit ===")
             remove_dc_obj = DeleteDataCenters(self.__test_client, self.__cleanUp)
             if remove_dc_obj:
