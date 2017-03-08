@@ -594,6 +594,14 @@ public class NetUtils {
         return result;
     }
 
+    public static SortedSet<Long> listIp2LongList(final List<String> ipStringList) {
+        SortedSet<Long> ipLongList = new TreeSet<>();
+        for( String ip : ipStringList) {
+            ipLongList.add(ip2Long(ip));
+        }
+        return ipLongList;
+    }
+
     /**
      * Given a cidr, this method returns an ip address within the range but
      * is not in the avoid list.
