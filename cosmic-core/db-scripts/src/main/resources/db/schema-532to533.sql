@@ -15,3 +15,5 @@ ALTER TABLE `cloud`.`template_store_ref` MODIFY COLUMN `download_url` varchar(20
 ALTER table vpc_offerings ADD `secondary_service_offering_id` bigint(20) unsigned DEFAULT NULL COMMENT 'service offering id that a secondary virtual router is tied to';
 ALTER table network_offerings ADD `secondary_service_offering_id` bigint(20) unsigned DEFAULT NULL COMMENT 'service offering id that a secondary virtual router is tied to';
 
+-- Add ip exclusion list
+ALTER TABLE `cloud`.`networks` ADD COLUMN `ip_exclusion_list` varchar(255) DEFAULT NULL COMMENT 'IP list excluded from assignment' AFTER `redundant`;
