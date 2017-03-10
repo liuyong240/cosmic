@@ -60,7 +60,8 @@ class TestIpExclusionList(cloudstackTestCase):
                 'name': 'vm3',
                 'displayname': 'vm3',
                 'privateport': 22,
-                'publicport': 322
+                'publicport': 322,
+                'protocol': 'TCP'
             }
         },
         'nat_rule': {
@@ -256,16 +257,8 @@ class TestIpExclusionList(cloudstackTestCase):
                                          domainid=self.domain.id,
                                          accountid=self.account.name,
                                          mode='advanced')
-        self.logger.debug("[TEST] VM '%s' created, Network: %s, IP %s", self.vm2.name, self.network2.name,
-                          self.vm2.nic[0].ipaddress)
 
-        self.assertTrue(self.vm2.nic[0].ipaddress == '10.1.2.6', "VM should be assigned the only IP available")
-        self.logger.debug('[TEST] Check assigned IP: OK')
-
-        ssh_client = self.vm2.get_ssh_client(reconnect=True, retries=10)
-        result = ssh_client.execute("/sbin/ip addr show")
-        self.assertTrue('10.1.2.6' in str(result), "VM should implement the only IP available, ip addr show: " + str(result))
-        self.logger.debug('[TEST] Check implemented IP: OK')
+        self.test_vm(self.vm2, self.network2, '10.1.2.6')
         #
         # Create network and deploy VM; check if VM gets only IP left
         #
@@ -305,22 +298,34 @@ class TestIpExclusionList(cloudstackTestCase):
 
         self.network2.update(self.api_client,
                              ipexclusionlist='10.1.2.2-10.1.2.4')
+        self.logger.debug('[TEST] IP list expanded')
+
+
+        self.logger.debug('[TEST] Try to deploy new VM')
+
+        self.vm3 = VirtualMachine.create(self.api_client,
+                                             self.attributes['vms']['vm3'],
+                                             templateid=self.template.id,
+                                             serviceofferingid=self.virtual_machine_offering.id,
+                                             networkids=[self.network2.id],
+                                             zoneid=self.zone.id,
+                                             domainid=self.domain.id,
+                                             accountid=self.account.name,
+                                             mode='advanced')
+        self.test_vm(self.vm3, self.network2, '10.1.2.5')
         #
         # Extend ipexclusionlist and deploy another VM; check if VM gets only IP left
         #
 
-
-    def test_no_connectivity(self):
-
-        failed = False
-        try:
-            self.vm1.get_ssh_client(ipaddress=self.public_ip1.ipaddress.ipaddress, reconnect=True, retries=2)
-
-        except Exception as e:
-            self.logger.debug('[TEST] Ensure no connectivity: OK')
-            failed = True
-
-        self.assertTrue(failed)
+    def test_vm(self, vm, network, expected_value):
+        self.logger.debug("[TEST] VM '%s' created, Network: %s, IP %s", vm.name, network.name,
+                          vm.nic[0].ipaddress)
+        self.assertTrue(vm.nic[0].ipaddress == expected_value, "VM should be assigned the only IP available")
+        ssh_client = vm.get_ssh_client(reconnect=True, retries=10)
+        result = ssh_client.execute("/sbin/ip addr show")
+        self.assertTrue(expected_value in str(result),
+                        "VM should implement the only IP available, ip addr show: " + str(result))
+        self.logger.debug('[TEST] Check implemented IP: OK')
 
     @classmethod
     def get_default_vpc_offering(cls):
